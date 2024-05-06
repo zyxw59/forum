@@ -1,0 +1,19 @@
+{% extends "main.html" %} {% block content %}
+<div class="container">
+  <h1>Forums</h1>
+  <table>
+    <tbody>
+      <thead>
+        <tr>
+          <th>Title</th>
+        </tr>
+      </thead>
+      {% for forum in forums %}
+      <tr class="list-entry">
+        <td><a href="/forum/{{ forum.id }}">{{ forum.name }}</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock content %}
