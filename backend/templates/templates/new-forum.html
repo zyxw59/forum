@@ -1,0 +1,14 @@
+{% extends "main.html" %} {% block content %}
+<div class="container">
+  <h1>New Forum</h1>
+  <form method="post">
+    <label>Forum name: <input name="forum-name" /></label>
+    {% match parent %}
+    {% when Some with (parent) %}
+    <input type="hidden" name="parent" value="{{ parent }}" />
+    {% when none %}
+    {% endmatch %}
+    <input type="submit" />
+  </form>
+</div>
+{% endblock content %}

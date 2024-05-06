@@ -27,6 +27,8 @@ async fn main() -> anyhow::Result<()> {
             .wrap(TracingLogger::default())
             .app_data(web::Data::new(state.clone()))
             .service(services::toplevel_forums)
+            .service(services::get_create_forum)
+            .service(services::post_create_forum)
     })
     .bind(("0.0.0.0", 3000))?
     .run()

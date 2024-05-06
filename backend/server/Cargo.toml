@@ -19,3 +19,5 @@ entity = { path = "../entity" }
 migration = { version = "0.1.0", path = "../migration" }
 templates = { version = "0.0.0", path = "../templates" }
 dotenvy = "0.15.7"
+serde = { version = "1.0.200", features = ["derive"] }
+rand = "0.8.5"
