@@ -1,5 +1,5 @@
 use actix_web::{error, web, Responder, Result};
-use entity::forum;
+use entity::{forum, thread};
 use sea_orm::{prelude::*, ActiveValue};
 use serde::Deserialize;
 
@@ -12,7 +12,25 @@ pub async fn toplevel_forums(state: web::Data<AppState>) -> Result<impl Responde
         .all(&state.connection)
         .await
         .map_err(error::ErrorInternalServerError)?;
-    Ok(templates::Index { forums })
+    Ok(templates::Index {
+        forums,
+        threads: Vec::new(),
+    })
+}
+
+#[actix_web::get("/forum/{id}")]
+pub async fn get_forum(state: web::Data<AppState>, id: web::Path<i64>) -> Result<impl Responder> {
+    let forums: Vec<_> = forum::Entity::find()
+        .filter(forum::Column::Parent.eq(*id))
+        .all(&state.connection)
+        .await
+        .map_err(error::ErrorInternalServerError)?;
+    let threads: Vec<_> = thread::Entity::find()
+        .filter(thread::Column::Forum.eq(*id))
+        .all(&state.connection)
+        .await
+        .map_err(error::ErrorInternalServerError)?;
+    Ok(templates::Index { forums, threads })
 }
 
 #[actix_web::get("/forum/new")]

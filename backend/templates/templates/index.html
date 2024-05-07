@@ -1,19 +1,38 @@
 {% extends "main.html" %} {% block content %}
 <div class="container">
-  <h1>Forums</h1>
-  <table>
-    <tbody>
-      <thead>
-        <tr>
-          <th>Title</th>
-        </tr>
-      </thead>
-      {% for forum in forums %}
-      <tr class="list-entry">
-        <td><a href="/forum/{{ forum.id }}">{{ forum.name }}</a></td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  {% if !forums.is_empty() %}
+    <h1>Forums</h1>
+    <table>
+      <tbody>
+        <thead>
+          <tr>
+            <th>Title</th>
+          </tr>
+        </thead>
+        {% for forum in forums %}
+          <tr class="list-entry">
+            <td><a href="/forum/{{ forum.id }}">{{ forum.name }}</a></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+  {% if !threads.is_empty() %}
+    <h1>Threads</h1>
+    <table>
+      <tbody>
+        <thead>
+          <tr>
+            <th>Title</th>
+          </tr>
+        </thead>
+        {% for thread in threads %}
+          <tr class="list-entry">
+            <td><a href="/thread/{{ thread.id }}">{{ thread.title }}</a></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
 </div>
 {% endblock content %}
