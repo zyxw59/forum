@@ -1,7 +1,7 @@
 use askama_actix::Template;
 use entity::{
-    forum::Model as Forum,
-    thread::Model as Thread,
+    Forum, ForumKey,
+    raw::thread::Model as Thread,
 };
 
 #[derive(Template)]
@@ -14,5 +14,5 @@ pub struct Index {
 #[derive(Template)]
 #[template(path = "new-forum.html")]
 pub struct NewForum {
-    pub parent: Option<u32>,
+    pub parent: Option<ForumKey>,
 }
