@@ -14,5 +14,5 @@ pub struct Index {
 #[derive(Template)]
 #[template(path = "new-forum.html")]
 pub struct NewForum {
-    pub parent: Option<i64>,
+    pub parent: Option<u32>,
 }
