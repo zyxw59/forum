@@ -19,6 +19,7 @@ pub async fn toplevel_forums(state: web::Data<AppState>) -> Result<impl Responde
         .map(Into::into)
         .collect();
     Ok(templates::Index {
+        title: "All forums".into(),
         id: None,
         forums,
         threads: Vec::new(),
@@ -30,6 +31,12 @@ pub async fn get_forum(
     state: web::Data<AppState>,
     id: web::Path<ForumKey>,
 ) -> Result<impl Responder> {
+    let forum = forum::Entity::find()
+        .filter(forum::Column::Id.eq(*id))
+        .one(&state.connection)
+        .await
+        .map_err(error::ErrorInternalServerError)?
+        .ok_or_else(|| error::ErrorNotFound(format!("No forum with id {id} found")))?;
     let forums: Vec<_> = forum::Entity::find()
         .filter(forum::Column::Parent.eq(*id))
         .all(&state.connection)
@@ -44,6 +51,7 @@ pub async fn get_forum(
         .await
         .map_err(error::ErrorInternalServerError)?;
     Ok(templates::Index {
+        title: forum.title.into(),
         id: Some(*id),
         forums,
         threads,

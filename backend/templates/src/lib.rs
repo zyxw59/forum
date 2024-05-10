@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use askama_actix::Template;
 use entity::{
     Forum, ForumKey,
@@ -7,6 +9,7 @@ use entity::{
 #[derive(Template)]
 #[template(path = "index.html")]
 pub struct Index {
+    pub title: Cow<'static, str>,
     pub id: Option<ForumKey>,
     pub forums: Vec<Forum>,
     pub threads: Vec<Thread>,
