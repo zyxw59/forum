@@ -17,6 +17,7 @@
       </tbody>
     </table>
   {% endif %}
+  <a href="/forum/new{% if let Some(id) = id %}?parent={{ id }}{% endif %}">Create new forum</a>
   {% if !threads.is_empty() %}
     <h1>Threads</h1>
     <table>

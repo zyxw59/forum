@@ -19,6 +19,7 @@ pub async fn toplevel_forums(state: web::Data<AppState>) -> Result<impl Responde
         .map(Into::into)
         .collect();
     Ok(templates::Index {
+        id: None,
         forums,
         threads: Vec::new(),
     })
@@ -42,7 +43,11 @@ pub async fn get_forum(
         .all(&state.connection)
         .await
         .map_err(error::ErrorInternalServerError)?;
-    Ok(templates::Index { forums, threads })
+    Ok(templates::Index {
+        id: Some(*id),
+        forums,
+        threads,
+    })
 }
 
 #[actix_web::get("/forum/new")]

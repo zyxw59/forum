@@ -7,6 +7,7 @@ use entity::{
 #[derive(Template)]
 #[template(path = "index.html")]
 pub struct Index {
+    pub id: Option<ForumKey>,
     pub forums: Vec<Forum>,
     pub threads: Vec<Thread>,
 }
