@@ -1,7 +1,7 @@
 use actix_web::{error, web, Responder, Result};
 use entity::{
     raw::{forum, thread},
-    ActiveForum, ForumKey,
+    ForumKey,
 };
 use sea_orm::{prelude::*, ActiveValue};
 use serde::Deserialize;
@@ -75,12 +75,11 @@ pub async fn post_create_forum(
     state: web::Data<AppState>,
     web::Form(query): web::Form<PostCreateForum>,
 ) -> Result<impl Responder> {
-    let new_forum = ActiveForum {
+    let new_forum = forum::ActiveModel {
         title: ActiveValue::Set(query.forum_name),
-        parent: ActiveValue::Set(query.parent),
+        parent: ActiveValue::Set(query.parent.map(Into::into)),
         ..Default::default()
     }
-    .into_raw()
     .insert(&state.connection)
     .await
     .map_err(error::ErrorInternalServerError)?;
