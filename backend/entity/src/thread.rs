@@ -7,19 +7,13 @@ use sea_orm::entity::prelude::*;
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: i64,
+    pub forum: i32,
     pub title: String,
-    pub forum: i64,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(
-        belongs_to = "super::forum::Entity",
-        from = "Column::Forum",
-        to = "super::forum::Column::Id",
-        on_update = "NoAction",
-        on_delete = "NoAction"
-    )]
+    #[sea_orm(has_many = "super::forum::Entity")]
     Forum,
     #[sea_orm(has_many = "super::post::Entity")]
     Post,

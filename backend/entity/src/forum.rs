@@ -5,23 +5,20 @@ use sea_orm::entity::prelude::*;
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
 #[sea_orm(table_name = "forum")]
 pub struct Model {
-    #[sea_orm(primary_key, auto_increment = false)]
-    pub id: i64,
-    pub name: String,
-    pub parent: Option<i64>,
+    #[sea_orm(primary_key)]
+    pub id: i32,
+    pub title: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
     #[sea_orm(
-        belongs_to = "Entity",
-        from = "Column::Parent",
-        to = "Column::Id",
+        belongs_to = "super::thread::Entity",
+        from = "Column::Id",
+        to = "super::thread::Column::Id",
         on_update = "NoAction",
         on_delete = "NoAction"
     )]
-    SelfRef,
-    #[sea_orm(has_many = "super::thread::Entity")]
     Thread,
 }
 
