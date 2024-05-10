@@ -18,6 +18,15 @@ impl MigrationTrait for Migration {
                             .primary_key(),
                     )
                     .col(ColumnDef::new(Forum::Title).string().not_null())
+                    .col(ColumnDef::new(Forum::Parent).integer())
+                    .take(),
+            )
+            .await?;
+        manager
+            .create_foreign_key(
+                ForeignKey::create()
+                    .from(Forum::Table, Forum::Parent)
+                    .to(Forum::Table, Forum::Id)
                     .take(),
             )
             .await?;
@@ -39,8 +48,8 @@ impl MigrationTrait for Migration {
         manager
             .create_foreign_key(
                 ForeignKey::create()
-                    .from(Forum::Table, Forum::Id)
-                    .to(Thread::Table, Thread::Id)
+                    .from(Thread::Table, Thread::Forum)
+                    .to(Forum::Table, Forum::Id)
                     .take(),
             )
             .await?;
@@ -87,6 +96,7 @@ enum Forum {
     Table,
     Id,
     Title,
+    Parent,
 }
 
 #[derive(DeriveIden)]

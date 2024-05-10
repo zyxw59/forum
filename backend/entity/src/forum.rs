@@ -8,17 +8,20 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
     pub title: String,
+    pub parent: Option<i32>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
     #[sea_orm(
-        belongs_to = "super::thread::Entity",
-        from = "Column::Id",
-        to = "super::thread::Column::Id",
+        belongs_to = "Entity",
+        from = "Column::Parent",
+        to = "Column::Id",
         on_update = "NoAction",
         on_delete = "NoAction"
     )]
+    SelfRef,
+    #[sea_orm(has_many = "super::thread::Entity")]
     Thread,
 }
 

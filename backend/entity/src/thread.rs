@@ -13,7 +13,13 @@ pub struct Model {
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_many = "super::forum::Entity")]
+    #[sea_orm(
+        belongs_to = "super::forum::Entity",
+        from = "Column::Forum",
+        to = "super::forum::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
     Forum,
     #[sea_orm(has_many = "super::post::Entity")]
     Post,
