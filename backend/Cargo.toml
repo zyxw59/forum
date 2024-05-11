@@ -6,3 +6,6 @@ members = [
     "entity",
     "templates",
 ]
+
+[workspace.dependencies]
+sea-orm = "0.12.15"

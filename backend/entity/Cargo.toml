@@ -6,6 +6,6 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-sea-orm = "0.12.15"
+sea-orm = { workspace = true }
 sea-orm-newtype = "0.0.1"
-serde = { version = "1.0.201", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }

@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 actix-web = "4.5.1"
 anyhow = "1.0.82"
-sea-orm = "0.12.15"
+sea-orm = { workspace = true }
 thiserror = "1.0.59"
 tokio = { version = "1.37.0", features = ["full"] }
 tracing = "0.1.40"
