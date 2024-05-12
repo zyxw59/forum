@@ -1,0 +1,18 @@
+{% extends "main.html" %}
+{% block title %}
+  New post in {{ parent.title() }}
+{% endblock title %}
+{% block content %}
+<div class="container">
+  <form method="post">
+    {% match parent %}
+    {% when ThreadOrForum::Forum with (forum) %}
+    <label>Thread title: <input name="thread-title" /></label>
+    {% when ThreadOrForum::Thread with (thread) %}
+    <input type="hidden" name="thread" value="{{ thread.id }}" />
+    {% endmatch %}
+    <textarea name="text"></textarea>
+    <input type="submit" />
+  </form>
+</div>
+{% endblock content %}
