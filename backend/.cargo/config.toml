@@ -1,0 +1,2 @@
+[patch.crates-io]
+sea-orm-newtype = { git = "https://github.com/zyxw59/sea-orm-newtype", branch = "try-get-by-null" }
