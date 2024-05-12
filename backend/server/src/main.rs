@@ -1,4 +1,4 @@
-use actix_web::{App, HttpServer, web};
+use actix_web::{web, App, HttpServer};
 use migration::{Migrator, MigratorTrait};
 use sea_orm::{Database, DatabaseConnection};
 use tracing_actix_web::TracingLogger;

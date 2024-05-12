@@ -1,10 +1,7 @@
 use std::borrow::Cow;
 
 use askama_actix::Template;
-use entity::{
-    Forum, ForumKey,
-    raw::thread::Model as Thread,
-};
+use entity::{raw::thread::Model as Thread, Forum, ForumKey};
 
 #[derive(Template)]
 #[template(path = "index.html")]
