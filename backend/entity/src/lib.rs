@@ -1,5 +1,6 @@
 use std::fmt;
 
+use sea_orm::{DerivePartialModel, FromQueryResult};
 use sea_orm_newtype::DeriveNewType;
 use serde::{Deserialize, Serialize};
 
@@ -28,6 +29,8 @@ impl From<ForumKey> for i32 {
     }
 }
 
+#[derive(FromQueryResult, DerivePartialModel)]
+#[sea_orm(entity = "raw::forum::Entity")]
 pub struct Forum {
     pub id: ForumKey,
     pub title: String,
@@ -36,16 +39,6 @@ pub struct Forum {
 
 impl From<Forum> for raw::forum::Model {
     fn from(value: Forum) -> Self {
-        Self {
-            id: value.id.into(),
-            title: value.title,
-            parent: value.parent.map(Into::into),
-        }
-    }
-}
-
-impl From<raw::forum::Model> for Forum {
-    fn from(value: raw::forum::Model) -> Self {
         Self {
             id: value.id.into(),
             title: value.title,

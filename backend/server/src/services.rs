@@ -12,12 +12,10 @@ use crate::AppState;
 pub async fn toplevel_forums(state: web::Data<AppState>) -> Result<impl Responder> {
     let forums: Vec<_> = forum::Entity::find()
         .filter(forum::Column::Parent.is_null())
+        .into_partial_model()
         .all(&state.connection)
         .await
-        .map_err(error::ErrorInternalServerError)?
-        .into_iter()
-        .map(Into::into)
-        .collect();
+        .map_err(error::ErrorInternalServerError)?;
     Ok(templates::Index {
         title: "All forums".into(),
         id: None,
@@ -39,12 +37,10 @@ pub async fn get_forum(
         .ok_or_else(|| error::ErrorNotFound(format!("No forum with id {id} found")))?;
     let forums: Vec<_> = forum::Entity::find()
         .filter(forum::Column::Parent.eq(*id))
+        .into_partial_model()
         .all(&state.connection)
         .await
-        .map_err(error::ErrorInternalServerError)?
-        .into_iter()
-        .map(Into::into)
-        .collect();
+        .map_err(error::ErrorInternalServerError)?;
     let threads: Vec<_> = thread::Entity::find()
         .filter(thread::Column::Forum.eq(*id))
         .all(&state.connection)
