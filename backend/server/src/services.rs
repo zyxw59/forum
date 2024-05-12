@@ -1,7 +1,7 @@
 use actix_web::{error, web, Responder, Result};
 use entity::{
     raw::{forum, thread},
-    ForumKey,
+    Forum, ForumKey,
 };
 use sea_orm::{prelude::*, ActiveValue};
 use serde::Deserialize;
@@ -87,4 +87,21 @@ pub async fn post_create_forum(
 struct PostCreateForum {
     parent: Option<ForumKey>,
     forum_name: String,
+}
+
+#[actix_web::get("/forum/{id}/new")]
+pub async fn get_create_thread(
+    state: web::Data<AppState>,
+    id: web::Path<ForumKey>,
+) -> Result<impl Responder> {
+    let forum = forum::Entity::find()
+        .filter(forum::Column::Id.eq(*id))
+        .into_partial_model::<Forum>()
+        .one(&state.connection)
+        .await
+        .map_err(error::ErrorInternalServerError)?
+        .ok_or_else(|| error::ErrorNotFound(format!("No forum with id {id} found")))?;
+    Ok(templates::NewPost {
+        parent: forum.into(),
+    })
 }

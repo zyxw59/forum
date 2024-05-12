@@ -37,3 +37,15 @@ impl ThreadOrForum {
         }
     }
 }
+
+impl From<Forum> for ThreadOrForum {
+    fn from(forum: Forum) -> Self {
+        Self::Forum(forum)
+    }
+}
+
+impl From<Thread> for ThreadOrForum {
+    fn from(thread: Thread) -> Self {
+        Self::Thread(thread)
+    }
+}
