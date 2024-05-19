@@ -7,7 +7,7 @@
   <form method="post">
     {% match parent %}
     {% when ThreadOrForum::Forum with (forum) %}
-    <label>Thread title: <input name="thread-title" /></label>
+    <label>Thread title: <input name="title" /></label>
     {% when ThreadOrForum::Thread with (thread) %}
     <input type="hidden" name="thread" value="{{ thread.id }}" />
     {% endmatch %}

@@ -31,6 +31,7 @@ async fn main() -> anyhow::Result<()> {
             .service(services::post_create_forum)
             .service(services::get_forum)
             .service(services::get_create_thread)
+            .service(services::post_create_thread)
     })
     .bind(("0.0.0.0", 3000))?
     .run()

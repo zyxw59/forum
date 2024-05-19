@@ -1,9 +1,9 @@
 use actix_web::{error, web, Responder, Result};
 use entity::{
-    raw::{forum, thread},
-    Forum, ForumKey,
+    raw::{forum, post, thread},
+    Forum, ForumKey, ThreadKey,
 };
-use sea_orm::{prelude::*, ActiveValue};
+use sea_orm::{prelude::*, ActiveValue, TransactionTrait};
 use serde::Deserialize;
 
 use crate::AppState;
@@ -104,4 +104,44 @@ pub async fn get_create_thread(
     Ok(templates::NewPost {
         parent: forum.into(),
     })
+}
+
+#[actix_web::post("/forum/{id}/new")]
+pub async fn post_create_thread(
+    state: web::Data<AppState>,
+    id: web::Path<ForumKey>,
+    web::Form(query): web::Form<PostCreateThread>,
+) -> Result<impl Responder> {
+    let new_thread = state
+        .connection
+        .transaction::<_, _, sea_orm::DbErr>(|txn| {
+            Box::pin(async move {
+                let new_thread = thread::ActiveModel {
+                    id: ActiveValue::Set(ThreadKey::new_random().into()),
+                    forum: ActiveValue::Set((*id).into()),
+                    title: ActiveValue::Set(query.title),
+                }
+                .insert(txn)
+                .await?;
+                post::ActiveModel {
+                    id: ActiveValue::Set(0),
+                    thread: ActiveValue::Set(new_thread.id),
+                    text: ActiveValue::Set(query.text),
+                    date: ActiveValue::NotSet,
+                }
+                .insert(txn)
+                .await?;
+                Ok(new_thread)
+            })
+        })
+        .await
+        .map_err(error::ErrorInternalServerError)?;
+    Ok(web::Redirect::to(format!("/thread/{}", ThreadKey::from(new_thread.id))).see_other())
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+struct PostCreateThread {
+    title: String,
+    text: String,
 }
