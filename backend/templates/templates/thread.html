@@ -1,0 +1,10 @@
+{% extends "main.html" %}
+{% block title %}{{thread.title}}{% endblock title %}
+{% block content %}
+  {% for post in posts %}
+    <article id="post-{{post.id}}">
+      <time datetime="{{post.date}}">{{post.date}}</time>
+      {{post.text}}
+    </article>
+  {% endfor %}
+{% endblock content %}

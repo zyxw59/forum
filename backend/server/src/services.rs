@@ -145,3 +145,25 @@ struct PostCreateThread {
     title: String,
     text: String,
 }
+
+#[actix_web::get("/thread/{id}")]
+pub async fn view_thread(
+    state: web::Data<AppState>,
+    id: web::Path<ThreadKey>,
+) -> Result<impl Responder> {
+    let thread = thread::Entity::find()
+        .filter(thread::Column::Id.eq(*id))
+        .one(&state.connection)
+        .await
+        .map_err(error::ErrorInternalServerError)?
+        .ok_or_else(|| error::ErrorNotFound(format!("No forum with id {id} found")))?;
+    let posts: Vec<_> = post::Entity::find()
+        .filter(post::Column::Thread.eq(*id))
+        .all(&state.connection)
+        .await
+        .map_err(error::ErrorInternalServerError)?;
+    Ok(templates::ViewThread {
+        thread,
+        posts,
+    })
+}

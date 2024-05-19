@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use askama_actix::Template;
-use entity::{raw::thread::Model as Thread, Forum, ForumKey};
+use entity::{raw::post::Model as Post, raw::thread::Model as Thread, Forum, ForumKey};
 
 #[derive(Template)]
 #[template(path = "index.html")]
@@ -48,4 +48,11 @@ impl From<Thread> for ThreadOrForum {
     fn from(thread: Thread) -> Self {
         Self::Thread(thread)
     }
+}
+
+#[derive(Template)]
+#[template(path = "thread.html")]
+pub struct ViewThread {
+    pub thread: Thread,
+    pub posts: Vec<Post>,
 }
