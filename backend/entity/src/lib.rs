@@ -1,10 +1,11 @@
 use std::fmt;
 
-use sea_orm::{DerivePartialModel, FromQueryResult};
+use sea_orm::DeriveModel;
 use sea_orm_newtype::DeriveNewType;
 use serde::{Deserialize, Serialize};
 
 pub mod raw;
+use raw::{forum::Entity as ForumEntity, thread::Entity as ThreadEntity};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, DeriveNewType)]
 #[serde(transparent)]
@@ -58,8 +59,8 @@ impl From<ThreadKey> for i64 {
     }
 }
 
-#[derive(FromQueryResult, DerivePartialModel)]
-#[sea_orm(entity = "raw::forum::Entity")]
+#[derive(Clone, Debug, DeriveModel)]
+#[sea_orm(entity = ForumEntity)]
 pub struct Forum {
     pub id: ForumKey,
     pub title: String,
@@ -76,8 +77,8 @@ impl From<Forum> for raw::forum::Model {
     }
 }
 
-#[derive(FromQueryResult, DerivePartialModel)]
-#[sea_orm(entity = "raw::thread::Entity")]
+#[derive(Clone, Debug, DeriveModel)]
+#[sea_orm(entity = ThreadEntity)]
 pub struct Thread {
     pub id: ThreadKey,
     pub forum: ForumKey,

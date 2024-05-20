@@ -28,7 +28,7 @@ pub async fn index(
             .into();
         threads = thread::Entity::find()
             .filter(thread::Column::Forum.eq(forum_id))
-            .into_partial_model()
+            .into_model()
             .all(&state.connection)
             .await
             .map_err(error::ErrorInternalServerError)?;
@@ -39,7 +39,7 @@ pub async fn index(
     }
     let forums: Vec<_> = forum::Entity::find()
         .filter(forums_filter)
-        .into_partial_model()
+        .into_model()
         .all(&state.connection)
         .await
         .map_err(error::ErrorInternalServerError)?;
@@ -85,7 +85,7 @@ pub async fn new_thread_get(
 ) -> Result<impl Responder> {
     let forum = forum::Entity::find()
         .filter(forum::Column::Id.eq(*id))
-        .into_partial_model::<Forum>()
+        .into_model::<Forum>()
         .one(&state.connection)
         .await
         .map_err(error::ErrorInternalServerError)?
@@ -140,7 +140,7 @@ pub async fn view_thread(
 ) -> Result<impl Responder> {
     let thread = thread::Entity::find()
         .filter(thread::Column::Id.eq(*id))
-        .into_partial_model()
+        .into_model()
         .one(&state.connection)
         .await
         .map_err(error::ErrorInternalServerError)?
@@ -159,7 +159,7 @@ pub async fn reply_get(
 ) -> Result<impl Responder> {
     let thread: Thread = thread::Entity::find()
         .filter(thread::Column::Id.eq(*id))
-        .into_partial_model()
+        .into_model()
         .one(&state.connection)
         .await
         .map_err(error::ErrorInternalServerError)?
