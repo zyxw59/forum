@@ -3,7 +3,7 @@ use entity::{
     raw::{forum, post, thread},
     Forum, ForumKey, ThreadKey,
 };
-use sea_orm::{prelude::*, ActiveValue, TransactionTrait};
+use sea_orm::{prelude::*, ActiveValue, QuerySelect, TransactionTrait};
 use serde::Deserialize;
 
 use crate::AppState;
@@ -162,8 +162,67 @@ pub async fn view_thread(
         .all(&state.connection)
         .await
         .map_err(error::ErrorInternalServerError)?;
-    Ok(templates::ViewThread {
-        thread,
-        posts,
+    Ok(templates::ViewThread { thread, posts })
+}
+
+#[actix_web::get("/thread/{id}/reply")]
+pub async fn get_reply_thread(
+    state: web::Data<AppState>,
+    id: web::Path<ThreadKey>,
+) -> Result<impl Responder> {
+    let thread = thread::Entity::find()
+        .filter(thread::Column::Id.eq(*id))
+        .one(&state.connection)
+        .await
+        .map_err(error::ErrorInternalServerError)?
+        .ok_or_else(|| error::ErrorNotFound(format!("No forum with id {id} found")))?;
+    Ok(templates::NewPost {
+        parent: thread.into(),
     })
+}
+
+#[actix_web::post("/thread/{id}/reply")]
+pub async fn post_reply_thread(
+    state: web::Data<AppState>,
+    id: web::Path<ThreadKey>,
+    web::Form(query): web::Form<PostReplyThread>,
+) -> Result<impl Responder> {
+    let id = *id;
+    let post_id = state
+        .connection
+        .transaction::<_, _, sea_orm::DbErr>(|txn| {
+            Box::pin(async move {
+                let last_post_id = post::Entity::find()
+                    .filter(post::Column::Thread.eq(id))
+                    .select_only()
+                    .expr(post::Column::Id.max())
+                    .into_tuple::<(i16,)>()
+                    .one(txn)
+                    .await?;
+                let post_id = if let Some((last_post_id,)) = last_post_id {
+                    last_post_id + 1
+                } else {
+                    return Ok(None);
+                };
+                post::ActiveModel {
+                    id: ActiveValue::Set(post_id),
+                    thread: ActiveValue::Set(id.into()),
+                    text: ActiveValue::Set(query.text),
+                    date: ActiveValue::NotSet,
+                }
+                .insert(txn)
+                .await?;
+                Ok(Some(post_id))
+            })
+        })
+        .await
+        .map_err(error::ErrorInternalServerError)?
+        .ok_or_else(|| error::ErrorNotFound(format!("No thread with id {id} found")))?;
+    Ok(web::Redirect::to(format!("/thread/{id}#post-{post_id}")).see_other())
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+struct PostReplyThread {
+    text: String,
 }
