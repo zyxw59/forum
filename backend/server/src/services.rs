@@ -8,89 +8,73 @@ use serde::Deserialize;
 
 use crate::AppState;
 
-#[actix_web::get("/")]
-pub async fn toplevel_forums(state: web::Data<AppState>) -> Result<impl Responder> {
-    let forums: Vec<_> = forum::Entity::find()
-        .filter(forum::Column::Parent.is_null())
-        .into_partial_model()
-        .all(&state.connection)
-        .await
-        .map_err(error::ErrorInternalServerError)?;
-    Ok(templates::Index {
-        title: "All forums".into(),
-        id: None,
-        forums,
-        threads: Vec::new(),
-    })
-}
-
-#[actix_web::get("/forum/{id}")]
-pub async fn get_forum(
+pub async fn index(
     state: web::Data<AppState>,
-    id: web::Path<ForumKey>,
+    forum_id: Option<web::Path<ForumKey>>,
 ) -> Result<impl Responder> {
-    let forum = forum::Entity::find()
-        .filter(forum::Column::Id.eq(*id))
-        .one(&state.connection)
-        .await
-        .map_err(error::ErrorInternalServerError)?
-        .ok_or_else(|| error::ErrorNotFound(format!("No forum with id {id} found")))?;
+    let forum_id = forum_id.map(|id| *id);
+    let title;
+    let forums_filter;
+    let threads;
+    if let Some(forum_id) = forum_id {
+        forums_filter = forum::Column::Parent.eq(forum_id);
+        title = forum::Entity::find()
+            .filter(forum::Column::Id.eq(forum_id))
+            .one(&state.connection)
+            .await
+            .map_err(error::ErrorInternalServerError)?
+            .ok_or_else(|| error::ErrorNotFound(format!("No forum with id {forum_id} found")))?.title.into();
+        threads = thread::Entity::find()
+            .filter(thread::Column::Forum.eq(forum_id))
+            .all(&state.connection)
+            .await
+            .map_err(error::ErrorInternalServerError)?;
+    } else {
+        forums_filter = forum::Column::Parent.is_null();
+        title = "All forums".into();
+        threads = Vec::new();
+    }
     let forums: Vec<_> = forum::Entity::find()
-        .filter(forum::Column::Parent.eq(*id))
+        .filter(forums_filter)
         .into_partial_model()
         .all(&state.connection)
         .await
         .map_err(error::ErrorInternalServerError)?;
-    let threads: Vec<_> = thread::Entity::find()
-        .filter(thread::Column::Forum.eq(*id))
-        .all(&state.connection)
-        .await
-        .map_err(error::ErrorInternalServerError)?;
     Ok(templates::Index {
-        title: forum.title.into(),
-        id: Some(*id),
+        title,
+        id: forum_id,
         forums,
         threads,
     })
 }
 
-#[actix_web::get("/forum/new")]
-pub async fn get_create_forum(query: web::Query<GetCreateForum>) -> Result<impl Responder> {
-    Ok(templates::NewForum {
-        parent: query.parent,
-    })
+pub async fn new_forum_get(parent: Option<web::Path<ForumKey>>) -> Result<impl Responder> {
+    Ok(templates::NewForum { parent: parent.map(web::Path::into_inner) })
 }
 
-#[derive(Debug, Deserialize)]
-struct GetCreateForum {
-    parent: Option<ForumKey>,
-}
-
-#[actix_web::post("/forum/new")]
-pub async fn post_create_forum(
+pub async fn new_forum_post(
     state: web::Data<AppState>,
-    web::Form(query): web::Form<PostCreateForum>,
+    parent: Option<web::Path<ForumKey>>,
+    web::Form(query): web::Form<NewForum>,
 ) -> Result<impl Responder> {
     let new_forum = forum::ActiveModel {
         title: ActiveValue::Set(query.forum_name),
-        parent: ActiveValue::Set(query.parent.map(Into::into)),
+        parent: ActiveValue::Set(parent.map(|parent| (*parent).into())),
         ..Default::default()
     }
     .insert(&state.connection)
     .await
     .map_err(error::ErrorInternalServerError)?;
-    Ok(web::Redirect::to(format!("/forum/{}", ForumKey::from(new_forum.id))).see_other())
+    Ok(web::Redirect::to(format!("/forum/{}/", ForumKey::from(new_forum.id))).see_other())
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-struct PostCreateForum {
-    parent: Option<ForumKey>,
+pub struct NewForum {
     forum_name: String,
 }
 
-#[actix_web::get("/forum/{id}/new")]
-pub async fn get_create_thread(
+pub async fn new_thread_get(
     state: web::Data<AppState>,
     id: web::Path<ForumKey>,
 ) -> Result<impl Responder> {
@@ -106,11 +90,10 @@ pub async fn get_create_thread(
     })
 }
 
-#[actix_web::post("/forum/{id}/new")]
-pub async fn post_create_thread(
+pub async fn new_thread_post(
     state: web::Data<AppState>,
     id: web::Path<ForumKey>,
-    web::Form(query): web::Form<PostCreateThread>,
+    web::Form(query): web::Form<NewThread>,
 ) -> Result<impl Responder> {
     let new_thread = state
         .connection
@@ -136,17 +119,16 @@ pub async fn post_create_thread(
         })
         .await
         .map_err(error::ErrorInternalServerError)?;
-    Ok(web::Redirect::to(format!("/thread/{}", ThreadKey::from(new_thread.id))).see_other())
+    Ok(web::Redirect::to(format!("/thread/{}/", ThreadKey::from(new_thread.id))).see_other())
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-struct PostCreateThread {
+pub struct NewThread {
     title: String,
     text: String,
 }
 
-#[actix_web::get("/thread/{id}")]
 pub async fn view_thread(
     state: web::Data<AppState>,
     id: web::Path<ThreadKey>,
@@ -165,8 +147,7 @@ pub async fn view_thread(
     Ok(templates::ViewThread { thread, posts })
 }
 
-#[actix_web::get("/thread/{id}/reply")]
-pub async fn get_reply_thread(
+pub async fn reply_get(
     state: web::Data<AppState>,
     id: web::Path<ThreadKey>,
 ) -> Result<impl Responder> {
@@ -181,11 +162,10 @@ pub async fn get_reply_thread(
     })
 }
 
-#[actix_web::post("/thread/{id}/reply")]
-pub async fn post_reply_thread(
+pub async fn reply_post(
     state: web::Data<AppState>,
     id: web::Path<ThreadKey>,
-    web::Form(query): web::Form<PostReplyThread>,
+    web::Form(query): web::Form<Reply>,
 ) -> Result<impl Responder> {
     let id = *id;
     let post_id = state
@@ -218,11 +198,11 @@ pub async fn post_reply_thread(
         .await
         .map_err(error::ErrorInternalServerError)?
         .ok_or_else(|| error::ErrorNotFound(format!("No thread with id {id} found")))?;
-    Ok(web::Redirect::to(format!("/thread/{id}#post-{post_id}")).see_other())
+    Ok(web::Redirect::to(format!("/thread/{id}/#post-{post_id}")).see_other())
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-struct PostReplyThread {
+pub struct Reply {
     text: String,
 }

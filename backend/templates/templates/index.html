@@ -13,13 +13,13 @@
         </thead>
         {% for forum in forums %}
           <tr class="list-entry">
-            <td><a href="/forum/{{ forum.id }}">{{ forum.title }}</a></td>
+            <td><a href="/forum/{{ forum.id }}/">{{ forum.title }}</a></td>
           </tr>
         {% endfor %}
       </tbody>
     </table>
   {% endif %}
-  <a href="/forum/new{% if let Some(id) = id %}?parent={{ id }}{% endif %}">Create new forum</a>
+  <a href="new-forum">Create new forum</a>
   {% if id.is_some() %}
     <h2>Threads</h2>
     <table>
@@ -31,11 +31,12 @@
         </thead>
         {% for thread in threads %}
           <tr class="list-entry">
-            <td><a href="/thread/{{ thread.id }}">{{ thread.title }}</a></td>
+            <td><a href="/thread/{{ thread.id }}/">{{ thread.title }}</a></td>
           </tr>
         {% endfor %}
       </tbody>
     </table>
+    <a href="new-thread">Create new thread</a>
   {% endif %}
 </div>
 {% endblock content %}

@@ -26,15 +26,23 @@ async fn main() -> anyhow::Result<()> {
         App::new()
             .wrap(TracingLogger::default())
             .app_data(web::Data::new(state.clone()))
-            .service(services::toplevel_forums)
-            .service(services::get_create_forum)
-            .service(services::post_create_forum)
-            .service(services::get_forum)
-            .service(services::get_create_thread)
-            .service(services::post_create_thread)
-            .service(services::view_thread)
-            .service(services::get_reply_thread)
-            .service(services::post_reply_thread)
+            .service(web::resource(["/", "/forum/{id}/"]).get(services::index))
+            .service(
+                web::resource(["/new-forum", "/forum/{id}/new-forum"])
+                    .route(web::get().to(services::new_forum_get))
+                    .route(web::post().to(services::new_forum_post)),
+            )
+            .service(
+                web::resource("/forum/{id}/new-thread")
+                    .route(web::get().to(services::new_thread_get))
+                    .route(web::post().to(services::new_thread_post)),
+            )
+            .service(web::resource("/thread/{id}/").get(services::view_thread))
+            .service(
+                web::resource("/thread/{id}/reply")
+                    .route(web::get().to(services::reply_get))
+                    .route(web::post().to(services::reply_post)),
+            )
     })
     .bind(("0.0.0.0", 3000))?
     .run()
