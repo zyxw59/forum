@@ -1,6 +1,6 @@
 {% extends "main.html" %}
 {% block title %}
-  New post in {{ parent.title() }}
+New {% if parent.is_forum() %}thread{% else %}post{% endif %} in {{ parent.title() }}
 {% endblock title %}
 {% block content %}
 <div class="container">

@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use askama_actix::Template;
-use entity::{raw::post::Model as Post, raw::thread::Model as Thread, Forum, ForumKey};
+use entity::{raw::post::Model as Post, Forum, ForumKey, Thread};
 
 #[derive(Template)]
 #[template(path = "index.html")]
@@ -35,6 +35,10 @@ impl ThreadOrForum {
             Self::Thread(thread) => &thread.title,
             Self::Forum(forum) => &forum.title,
         }
+    }
+
+    pub fn is_forum(&self) -> bool {
+        matches!(self, Self::Forum(_))
     }
 }
 

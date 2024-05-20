@@ -1,7 +1,7 @@
 use actix_web::{error, web, Responder, Result};
 use entity::{
     raw::{forum, post, thread},
-    Forum, ForumKey, ThreadKey,
+    Forum, ForumKey, Thread, ThreadKey,
 };
 use sea_orm::{prelude::*, ActiveValue, QuerySelect, TransactionTrait};
 use serde::Deserialize;
@@ -23,9 +23,12 @@ pub async fn index(
             .one(&state.connection)
             .await
             .map_err(error::ErrorInternalServerError)?
-            .ok_or_else(|| error::ErrorNotFound(format!("No forum with id {forum_id} found")))?.title.into();
+            .ok_or_else(|| error::ErrorNotFound(format!("No forum with id {forum_id} found")))?
+            .title
+            .into();
         threads = thread::Entity::find()
             .filter(thread::Column::Forum.eq(forum_id))
+            .into_partial_model()
             .all(&state.connection)
             .await
             .map_err(error::ErrorInternalServerError)?;
@@ -49,7 +52,9 @@ pub async fn index(
 }
 
 pub async fn new_forum_get(parent: Option<web::Path<ForumKey>>) -> Result<impl Responder> {
-    Ok(templates::NewForum { parent: parent.map(web::Path::into_inner) })
+    Ok(templates::NewForum {
+        parent: parent.map(web::Path::into_inner),
+    })
 }
 
 pub async fn new_forum_post(
@@ -135,6 +140,7 @@ pub async fn view_thread(
 ) -> Result<impl Responder> {
     let thread = thread::Entity::find()
         .filter(thread::Column::Id.eq(*id))
+        .into_partial_model()
         .one(&state.connection)
         .await
         .map_err(error::ErrorInternalServerError)?
@@ -151,8 +157,9 @@ pub async fn reply_get(
     state: web::Data<AppState>,
     id: web::Path<ThreadKey>,
 ) -> Result<impl Responder> {
-    let thread = thread::Entity::find()
+    let thread: Thread = thread::Entity::find()
         .filter(thread::Column::Id.eq(*id))
+        .into_partial_model()
         .one(&state.connection)
         .await
         .map_err(error::ErrorInternalServerError)?
